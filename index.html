@@ -1,0 +1,87 @@
+<html>
+<textarea rows='6' cols='100'></textarea>
+<div id="container"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script>
+
+function getIds(){
+    var body = 'APPNAMVE=Sooregon&PRGNAME=MLSSearchSaveCriteria&ARGUMENTS=-N135609391%2C-N18478936%2C-APB%2C-N0&SubmitInProcess=Yes&IsPublic=Y&IsFranchise=N&Submit_Value=&Search_Type=PB&DotNet_CP_Search=&CP_Search_Name=&DOTNET_SessionNumber=000000000&CP_Encrypted_String=&CP_hidEntryPoint=&CP_KeyRid=1&CP_SID=&CP_hidMLS=SORE&IsClientPortal=N&MLS_Origin=&submit=Search&Prop_Count=5&Single_PT_Selected=&Prop_Types_String=RESI%2CLOTL%2CINCP%2CCOMM%2CMOBL&Prop_Types_Amenity_String=Y%2CY%2CY%2CY%2CY&Prop_Types_Auction_String=&Prop_Types_Measurement_String=E%2CE%2CE%2CE%2CE&PT_Measurement_Default_String=A%2CA%2CA%2CA%2CA&Prop_Subtype_Count_RESI=7&Prop_Subtype_Count_LOTL=6&Prop_Subtype_Count_INCP=5&Prop_Subtype_Count_COMM=1&Prop_Subtype_Count_MOBL=2&Prop_Subtype_RESI_0001_X=RURL&Prop_Subtype_RESI_0002_X=COND&Prop_Subtype_RESI_0003_X=RESI&Prop_Subtype_RESI_0004_X=FARM&Prop_Subtype_RESI_0005_X=HTBB&Prop_Subtype_RESI_0006_X=NEWC&Prop_Subtype_RESI_0007_X=TWNS&Prop_Subtype_LOTL_0001_X=LOTL&Prop_Subtype_LOTL_0002_X=VLND&Prop_Subtype_LOTL_0003_X=UNIM&Prop_Subtype_LOTL_0004_X=INDU&Prop_Subtype_LOTL_0005_X=MUTF&Prop_Subtype_LOTL_0006_X=SSVS&Prop_Subtype_INCP_0001_X=DUPL&Prop_Subtype_INCP_0002_X=PLX3&Prop_Subtype_INCP_0003_X=PLX4&Prop_Subtype_INCP_0004_X=PLX5&Prop_Subtype_INCP_0005_X=MSFR&Prop_Subtype_MOBL_0001_X=INPK&Prop_Subtype_MOBL_0002_X=OLLD&IsRegion=N&RegionLabel=&RegionText=Click+the+icon+for+selections.&AreaText=Click+the+icon+for+selections.&AreaText2=Select+one++before+selecting+Areas.&Regions_PB=&Areas_PB=Click+the+icon+for+selections.&AreaLabel=Area&Region_Fill_In_5=&Area_Fill_In_5=&Region_Fill_In_6=&Area_Fill_In_6=&Region_Fill_In_7=&Area_Fill_In_7=&Region_Fill_In_8=&Area_Fill_In_8=&Region_Fill_In_9=&Area_Fill_In_9=&Enforce_Area_To_City=N&Area_Fill_In=&CityText=Click+the+icon+for+selections.&Cities_PB=Click+the+icon+for+selections.&City_Fill_In=&Zip_Fill_In=&Price_From_M1=&Price_From_M2=000&Price_Thru_M1=&Price_Thru_M2=000&Bedrooms_From=+&Bedrooms_Thru=+&Bathrooms_From=+&Bathrooms_Thru=+&Bathrooms_From_F=+&Bathrooms_Thru_F=+&Bathrooms_From_H=+&Bathrooms_Thru_H=+&Structure_Square_Feet_From=&Structure_Square_Feet_Thru=&Lot_Size_From=&Lot_Size_Thru=&Lot_Measurement=A&Listing_Number_1=2947949&Listing_Number_2=&Listing_Number_3=&Listing_Number_4=&Listing_Number_5='
+
+    body = body.replace('{{id1}}', "2947949");
+    body = body.replace('{{id2}}', "2948824");
+
+    var json = {
+        url:      "http://somls.rapmls.com/scripts/mgrqispi.dll",
+        method:   "POST",
+        selector: "$('a:contains(\"View Details\")')!.attr(\"href\")",
+        engine:   "jquery",
+        body:     body,
+        cache:    false,
+        debug:    true
+    };
+
+    send(json, function(response){
+        var results = response.result,
+            ids = [];
+
+        for (var i in results){
+            var result = results[i];
+            var id = $.trim(result.split(',')[1])
+            ids.push(id);
+        }
+
+        showIds(ids);
+    });
+}
+
+function showIds(ids){
+
+    for (var i in ids){
+
+        var id = ids[i];
+
+        var body = 'APPNAME=Sooregon&PRGNAME=MLSPropertyDetail&ARGUMENTS=-N135609391%2C-N171275%2C-N0%2C-A%2C-N18478936&VCR_String=002947949-&VCR_RID_String={{rid_string}}&Listing_Cart_Count=0&Listing_RID={{rid}}&Section_Type=&IDXSearchType='
+
+        body = body.replace('{{rid_string}}', id)
+        body = body.replace('{{rid_string}}', id)
+
+        var json = {
+            url:      "http://somls.rapmls.com/scripts/mgrqispi.dll",
+            method:   "POST",
+            body:     body,
+            cache:    false,
+            debug:    true
+        };
+
+        send(json, function(response){
+            $('#container').html(response.result);
+            console.log(response);
+        });
+    }
+}
+
+function send(json, cb){
+
+    var string = btoa(JSON.stringify(json));
+
+    $.ajax({
+        url : "http://sieve.alexose.com?callback=?",
+        data : { json : string },
+        dataType : "jsonp",
+        success: cb
+    });
+}
+
+function toJSON(string){
+    var pairs = string.split('&');
+
+    var result = {};
+    pairs.forEach(function(pair) {
+        pair = pair.split('=');
+        result[pair[0]] = decodeURIComponent(pair[1] || '');
+    });
+
+    return JSON.parse(JSON.stringify(result));
+}
+</script>
+</html>
