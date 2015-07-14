@@ -27,9 +27,23 @@
 				from { width:  }
 				to { width: 100% }
 			}
-
 			.photo:hover{
 				background: #ddd;
+			}
+			#slideshow{
+				position: fixed;
+				top: 0; bottom: 0; right: 0; left: 0;
+				background: rgba(0,0,0,0.9);
+			}
+			.visible {
+			  visibility: visible;
+			  opacity: 1;
+			  transition: opacity 0.2s linear;
+			}
+			.hidden {
+			  visibility: hidden;
+			  opacity: 0;
+			  transition: visibility 0s 0.2s, opacity 0.2s linear;
 			}
 		</style>
 	</head>
@@ -37,6 +51,7 @@
 		<div class="spinner"></div>
 		<div class="progress"></div>
 		<div id="container"></div>
+		<div id="slideshow" class="hidden"></div>
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 		<script>
@@ -186,9 +201,17 @@
 					urls = urls.filter(function(d, i) { return urls.indexOf(d) == i; });
 
 					urls.forEach(function(d){
-						var img = '<a href="' + d + '"><img src=' + d + ' class="photo"></a>';
+						var img = $('<a href="' + d + '"><img src=' + d + ' class="photo"></a>')
+							.click(function(evt){
+								evt.preventDefault();
+								$(document).trigger('slideshow:show', d);
+							});
+
 						$('#container').append(img);
 					});
+
+					// Update available slideshow urls
+					$(document).trigger('slideshow:urls', [urls]);
 				});
 			}
 		}
@@ -220,6 +243,68 @@
 		$(document).bind('progress', function(evt, val){
 			var percent = val + '%';
 			$('.progress').width(percent);
+		});
+		
+		var slideshow;
+		$(document).bind('slideshow:urls', function(evt, urls){
+			slideshow = urls;
+		});
+
+		$(document).bind('slideshow:show', function(evt, url){
+
+			var main = $('#slideshow').empty().attr('class', 'visible');
+
+			var fs = $('<img src="' + url + '">')
+				.css({
+					position: 'absolute',
+					margin: 'auto',
+					top: 0, bottom: 0, left:0, right:0,
+					'max-height': '80%'
+				})
+				.appendTo(main);
+
+			main.click(function(){
+				$(document).trigger('slideshow:hide');
+			});
+
+			fs.click(function(evt){
+				evt.stopPropagation;
+			});	
+
+			$(document).bind('keydown.slideshow', function(evt){
+				var k = evt.keyCode,
+					idx = slideshow.indexOf(url);
+
+				if (k == 27 || k == 37 || k == 38 || k == 39 || k == 40){
+					evt.preventDefault();
+				}
+
+				if (k == 27){ // Esc
+					$(document).trigger('slideshow:hide'); 
+				} else if (k == 37){ // Left
+					var prev = slideshow[idx-1];
+					if (prev){
+						fs.attr('src', prev);
+					}
+					url = prev;
+				} else if (k == 38){ // Up
+
+				} else if (k == 39){ // Right
+					var next = slideshow[idx+1];
+					console.log(slideshow, idx);
+					if (next){
+						fs.attr('src', next);
+						url = next;
+					}
+				} else if (k == 40){ // Down
+
+				};
+			});
+		});
+		
+		$(document).bind('slideshow:hide', function(evt){
+		    $('#slideshow').attr('class', 'hidden');
+			$(document).unbind('keypress.slideshow');
 		});
 
 		</script>
